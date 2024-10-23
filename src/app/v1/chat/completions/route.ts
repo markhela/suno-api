@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { DEFAULT_MODEL, sunoApi } from "@/lib/SunoApi";
 import { corsHeaders } from "@/lib/utils";
+import { firebaseAuthMiddleware } from "@/middleware/firebaseAuthMiddleware";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +10,11 @@ export const dynamic = "force-dynamic";
  *
  */
 export async function POST(req: NextRequest) {
-  try {
+  // Apply Firebase auth middleware
+  const authResponse = await firebaseAuthMiddleware(req);
+  if (authResponse) return authResponse;
 
+  try {
     const body = await req.json();
 
     let userMessage = null;
@@ -30,7 +34,6 @@ export async function POST(req: NextRequest) {
         }
       });
     }
-
 
     const audioInfo = await (await sunoApi).generate(userMessage.content, true, DEFAULT_MODEL, true);
 
